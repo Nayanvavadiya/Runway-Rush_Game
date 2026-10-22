@@ -97,25 +97,6 @@ Because Three.js is loaded via an external CDN script tag and there are no exter
 
 ---
 
-## 6. Technical Viva & Presentation Guide
-
-If asked by examiners or evaluators during your project demonstration, here are clear explanations of the underlying computer graphics and game development concepts used:
-
-### Q1: How does the endless road illusion work?
-> **Answer:** Rather than generating an infinitely large 3D plane that consumes endless RAM, we use **Segment Recycling (Object Pooling)**. We generate 7 consecutive road segments of 40 units each. During each frame, the road segments scroll towards the player along the $+Z$ axis. When a segment moves past the camera ($Z > 35$), it is immediately teleported to the far horizon behind the furthest segment. This creates an infinite road illusion with constant memory usage.
-
-### Q2: How does collision detection work?
-> **Answer:** We use **3D Axis-Aligned Bounding Box (AABB)** collision detection. Each frame, we compute the min and max coordinates ($X, Y, Z$) of the player's hitbox and the approaching obstacles.
-> - For **Road Barriers**: We check if the player's bottom $Y$ is greater than the barrier height. If jumping, the player clears it.
-> - For **Laser Gates**: The laser is elevated at $Y \approx 1.85m$. If the player is sliding, the player's mesh height shrinks to $0.45\times$, safely clearing underneath the beam.
-> - For **Crates**: The crate covers the full lane height, requiring the player to move horizontally.
-
-### Q3: Why use Delta Time (`clock.getDelta()`)?
-> **Answer:** Frame rates vary across different monitors (e.g., 60Hz, 120Hz, 144Hz). By multiplying velocities and speeds by `delta` (the elapsed seconds between consecutive frames), the character moves at the exact same physical speed regardless of whether the screen runs at 30, 60, or 144 FPS.
-
-### Q4: How is audio handled without external MP3 files?
-> **Answer:** We utilize the native browser **Web Audio API** (`AudioContext`). Using `OscillatorNode` and `GainNode`, we generate pure sine and triangle wave frequencies that ramp up or down dynamically (frequency sweeps for jump and slide, harmonic frequencies for coin chimes, and filtered noise buffers for crash impacts).
-
 ---
 
 ## 7. License & Credits
