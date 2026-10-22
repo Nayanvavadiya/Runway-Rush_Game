@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>3D Endless Runner | Modern Three.js Arcade Game</title>
+    <meta name="description"
+        content="A fast-paced, colorful 3D Endless Runner game built with Three.js, JavaScript, HTML5, and CSS3. Avoid obstacles, collect coins, and beat your high score!">
+
+    <!-- Google Fonts for Arcade & Modern UI -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Three.js CDN (r128 UMD) - completely standalone, zero build required -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+
+<body>
+
+    <!-- 3D Canvas Container -->
+    <div id="game-container"></div>
+
+    <!-- In-Game Heads-Up Display (HUD) -->
+    <div id="hud" class="ui-layer hidden">
+        <div class="hud-top">
+            <div class="hud-card score-card">
+                <span class="hud-label">SCORE</span>
+                <span id="score-display" class="hud-value">0</span>
+            </div>
+
+            <div class="hud-card coins-card" id="coins-card">
+                <span class="coin-icon">🪙</span>
+                <span id="coins-display" class="hud-value">0</span>
+                <span id="coin-gain-container" class="coin-gain-container"></span>
+            </div>
+
+            <div class="hud-card distance-card">
+                <span class="hud-label">DISTANCE</span>
+                <span id="distance-display" class="hud-value">0m</span>
+            </div>
+
+            <div class="hud-actions">
+                <button id="fullscreen-btn" class="icon-btn" title="Toggle Fullscreen (F)"
+                    aria-label="Toggle Fullscreen">⛶</button>
+                <button id="sound-toggle-btn" class="icon-btn" title="Toggle Sound"
+                    aria-label="Toggle Sound">🔊</button>
+                <button id="pause-btn" class="icon-btn" title="Pause Game (Esc / P)" aria-label="Pause Game">⏸</button>
+            </div>
+        </div>
+
+        <!-- Speed Multiplier Badge -->
+        <div id="speed-indicator" class="speed-badge">
+            <span class="speed-dot"></span>
+            <span id="speed-text">1.0x SPEED</span>
+        </div>
+
+        <!-- Mobile On-Screen Touch Controls -->
+        <div id="touch-controls">
+            <div class="touch-row horizontal-row">
+                <button id="btn-touch-left" class="touch-btn" aria-label="Move Left">◀</button>
+                <button id="btn-touch-right" class="touch-btn" aria-label="Move Right">▶</button>
+            </div>
+            <div class="touch-row vertical-row">
+                <button id="btn-touch-jump" class="touch-btn action-btn" aria-label="Jump">▲ JUMP</button>
+                <button id="btn-touch-slide" class="touch-btn action-btn" aria-label="Slide">▼ SLIDE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Text Notifications (+10, SPEED UP, etc.) -->
+    <div id="floating-notifications" aria-live="polite"></div>
+
+    <!-- Main Menu Overlay -->
+    <div id="main-menu" class="ui-layer modal-layer active">
+        <div class="menu-glass-panel">
+            <div class="logo-container">
+                <span class="badge-tag">3D JUNGLE EXPEDITION</span>
+                <h1 class="game-title">TEMPLE<span class="highlight">RUNNER</span></h1>
+                <p class="tagline">Sprint down the ancient stone viaduct through dense tropical jungle, leap over
+                    hurdles, slide beneath stone arches, and grab golden coins!</p>
+            </div>
+
+            <!-- High Score Banner -->
+            <div class="high-score-banner">
+                <span>🏆 BEST RECORD:</span>
+                <strong id="menu-high-score">0</strong>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="menu-actions">
+                <button id="start-game-btn" class="btn btn-primary pulse-effect">
+                    <span class="btn-icon">▶</span> START RUNNING
+                </button>
+                <button id="menu-fullscreen-btn" class="btn btn-secondary" title="Play Fullscreen (F)">
+                    <span class="btn-icon">⛶</span> FULLSCREEN
+                </button>
+            </div>
+
+            <!-- Quick Controls Guide -->
+            <div class="controls-guide-card">
+                <h3>🎮 CONTROLS</h3>
+                <div class="controls-grid">
+                    <div class="control-item">
+                        <div class="keys"><kbd>A</kbd> <kbd>◀</kbd></div>
+                        <span>Move Left</span>
+                    </div>
+                    <div class="control-item">
+                        <div class="keys"><kbd>D</kbd> <kbd>▶</kbd></div>
+                        <span>Move Right</span>
+                    </div>
+                    <div class="control-item">
+                        <div class="keys"><kbd>W</kbd> <kbd>▲</kbd> <kbd>SPACE</kbd></div>
+                        <span>Jump Over Hurdles</span>
+                    </div>
+                    <div class="control-item">
+                        <div class="keys"><kbd>S</kbd> <kbd>▼</kbd></div>
+                        <span>Slide Under Lasers</span>
+                    </div>
+                    <div class="control-item">
+                        <div class="keys"><kbd>ESC</kbd> <kbd>P</kbd></div>
+                        <span>Pause / Resume</span>
+                    </div>
+                    <div class="control-item">
+                        <div class="keys"><kbd>F</kbd></div>
+                        <span>Toggle Fullscreen</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Info -->
+            <div class="menu-footer">
+                <span>College Mini Project &bull; Built with Three.js &bull; Vanilla JS</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pause Menu Overlay -->
+    <div id="pause-menu" class="ui-layer modal-layer hidden">
+        <div class="menu-glass-panel mini-panel">
+            <h2 class="modal-title">GAME PAUSED</h2>
+            <p class="modal-subtitle">Take a breather, runner!</p>
+
+            <div class="menu-actions vertical">
+                <button id="resume-btn" class="btn btn-primary">RESUME</button>
+                <button id="pause-restart-btn" class="btn btn-secondary">RESTART</button>
+                <button id="pause-quit-btn" class="btn btn-outline">MAIN MENU</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Overlay -->
+    <div id="game-over-menu" class="ui-layer modal-layer hidden">
+        <div class="menu-glass-panel">
+            <div class="game-over-header">
+                <div class="crash-icon">💥</div>
+                <h2 class="modal-title text-danger">CRASHED!</h2>
+                <p class="modal-subtitle">You hit an obstacle on the run.</p>
+            </div>
+
+            <!-- New High Score Alert -->
+            <div id="new-high-score-banner" class="new-record-alert hidden">
+                🎉 NEW PERSONAL BEST! 🎉
+            </div>
+
+            <!-- Final Stats Summary -->
+            <div class="stats-summary-grid">
+                <div class="stat-box">
+                    <span class="stat-label">FINAL SCORE</span>
+                    <span id="final-score" class="stat-value">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">COINS COLLECTED</span>
+                    <span id="final-coins" class="stat-value">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">DISTANCE</span>
+                    <span id="final-distance" class="stat-value">0m</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">BEST RECORD</span>
+                    <span id="final-high-score" class="stat-value">0</span>
+                </div>
+            </div>
+
+            <!-- Game Over Action Buttons -->
+            <div class="menu-actions">
+                <button id="restart-game-btn" class="btn btn-primary pulse-effect">
+                    <span class="btn-icon">🔄</span> PLAY AGAIN
+                </button>
+                <button id="return-menu-btn" class="btn btn-outline">
+                    <span class="btn-icon">🏠</span> MAIN MENU
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Game Script -->
+    <script src="game.js"></script>
+</body>
+
+</html>
